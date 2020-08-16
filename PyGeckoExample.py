@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 USER CONFIG:
 """
 # The GeckoCIRCUITS simulation file. Make sure to provide an absolute path (this is taken care of by the script below)
+JDK_HOME_PATH = r"d:\\Java\\jdk1.8.0_261"
 SIM_FILE_PATH = "example.ipes"
 # Gecko communicates using sockets. Provide a port:
 GECKOPORT = 43036
@@ -35,11 +36,11 @@ os.environ['CLASSPATH'] = geckopath
 
 try:
     from jnius import autoclass
-
-except KeyError:
+except ImportError:
     # Make sure this knows where java is:
-    os.environ['JDK_HOME'] = "/usr/lib/jvm/java-1.8.0-openjdk-amd64"
-    os.environ['JAVA_HOME'] = "/usr/lib/jvm/java-1.8.0-openjdk-amd64"
+    os.environ['JDK_HOME'] = JDK_HOME_PATH
+    os.environ['JAVA_HOME'] = JDK_HOME_PATH
+    os.environ['PATH'] += f';{JDK_HOME_PATH}\\bin\\server;{JDK_HOME_PATH}\\bin'
     from jnius import autoclass
 
 # The class to control GeckoCIRCUITS:
@@ -75,12 +76,15 @@ ginst.set_Tend(5e-3)  # Simulation time
 ginst.set_dt_pre(0)
 ginst.set_Tend_pre(0)
 
-ginst.runSimulation()  # Run the simulation. This creates GeckoExport<N>.txt in the current directory
-ginst.shutdown()  # Close GeckoCIRCUITS. The data is stored in GeckoExport<N>.txt during the simulation.
+# Run the simulation. This creates GeckoExport<N>.txt in the current directory
+ginst.runSimulation()
+# Close GeckoCIRCUITS. The data is stored in GeckoExport<N>.txt during the simulation.
+ginst.shutdown()
 
 # Import the generated data:
 exp_fname = "GeckoExport" + "%d" % EXPORT_DATA_FILE_NUM + ".txt"
-data = np.genfromtxt(exp_fname, delimiter=',', skip_header=1, usecols=range(0, NUM_EXPORT_VARS + 1))
+data = np.genfromtxt(exp_fname, delimiter=',', skip_header=1,
+                     usecols=range(0, NUM_EXPORT_VARS + 1))
 time = data[:, 0]  # This is always given
 # Two variables were exported:
 val_1 = data[:, 1]
